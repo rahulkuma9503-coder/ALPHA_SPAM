@@ -2,11 +2,16 @@ import sys
 import os
 import json
 
-from config import X1, X2, X3, X4, X5, X6, X7, X8, X9, X10, OWNER_ID, SUDO_USERS, load_sudo_users, save_sudo_users, add_sudo_user, remove_sudo_user, CMD_HNDLR as hl
+from config import X1, X2, X3, X4, X5, X6, X7, X8, X9, X10, OWNER_ID, SUDO_USERS, load_sudo_users, save_sudo_users, add_sudo_user, remove_sudo_user, is_sudo_user, CMD_HNDLR as hl
 
 from os import execl, getenv
 from telethon import events
 from datetime import datetime
+
+
+def check_sudo(user_id):
+    """Check if user is sudo user (dynamic check)"""
+    return is_sudo_user(user_id)
 
 
 @X1.on(events.NewMessage(incoming=True, pattern=r"\%sping(?: |$)(.*)" % hl))
@@ -20,12 +25,14 @@ from datetime import datetime
 @X9.on(events.NewMessage(incoming=True, pattern=r"\%sping(?: |$)(.*)" % hl))
 @X10.on(events.NewMessage(incoming=True, pattern=r"\%sping(?: |$)(.*)" % hl))
 async def ping(e):
-    if e.sender_id in SUDO_USERS:
+    if check_sudo(e.sender_id):
         start = datetime.now()
         altron = await e.reply(f"•[ 🍹ᴀʟᴘʜᴀ тум 🍹 ]•")
         end = datetime.now()
         mp = (end - start).microseconds / 1000
-        await altron.edit(f"[🍹] 𝐀ʟᴘʜᴀ ᴘαᴘα ɪѕ нєʀє\n[🏓] αвє αв тєʀα куα нσgα\n\n➜ `{mp} ms`")
+        await altron.edit(f"[🍹] 𝐀ʟᴘʜᴀ ᴘαᴘα ɪѕ нєʀє\n[🏓] αвє αв тєʀα куα нσgα\n[⚡] кιѕкι ᴄнυ∂αι кαʀиι нαι\n\n➜ `{mp} ms`")
+    else:
+        await e.reply("**🚫 You are not authorized to use this command!**")
 
 
 @X1.on(events.NewMessage(incoming=True, pattern=r"\%sreboot(?: |$)(.*)" % hl))
@@ -39,7 +46,7 @@ async def ping(e):
 @X9.on(events.NewMessage(incoming=True, pattern=r"\%sreboot(?: |$)(.*)" % hl))
 @X10.on(events.NewMessage(incoming=True, pattern=r"\%sreboot(?: |$)(.*)" % hl))
 async def restart(e):
-    if e.sender_id in SUDO_USERS:
+    if check_sudo(e.sender_id):
         await e.reply(f"ʀєвσσт ᴅσиє\n[🍷] 2 мιит ωαιт ᴘℓєαѕє\n[🫧] fιʀ ααʏєɢα тєʀɪ мᴀᴀ ᴄнσᴅиє ᴀʟᴘʜᴀ ʙᴀʙʏ ")
         try:
             await X1.disconnect()
@@ -83,6 +90,8 @@ async def restart(e):
             pass
 
         execl(sys.executable, sys.executable, *sys.argv)
+    else:
+        await e.reply("**🚫 You are not authorized to use this command!**")
 
 
 @X1.on(events.NewMessage(incoming=True, pattern=r"\%saddsudo(?: |$)(.*)" % hl))
@@ -106,19 +115,18 @@ async def addsudo(event):
             await ok.edit("αвє ᴊʜᴀᴛ кє вααℓ υραʀ ѕє ʀєᴘℓу ᴅє ʀαнα нαι вααᴘ кσ")
             return
 
-        if target in SUDO_USERS:
+        if check_sudo(target):
             await ok.edit(f"ᴛʜɪꜱ ᴜꜱᴇʀ ɪꜱ ᴀʟʀᴇᴀᴅʏ ᴀ ꜱᴜᴅᴏ ᴜꜱᴇʀ !!")
         else:
             if add_sudo_user(target):
-                # Reload sudo users
-                from config import SUDO_USERS
-                SUDO_USERS.append(target)
                 await ok.edit(f"» σує нσує мєʀα ᴄυтє вαᴄнα\n:⧽ `{target}`\n:⧽ `ωєℓᴄσмє тσ ᴀʟᴘʜᴀ ѕραм`")
             else:
                 await ok.edit("**❌ Failed to add sudo user!**")
     
-    elif event.sender_id in SUDO_USERS:
+    elif check_sudo(event.sender_id):
         await event.reply("» ꜱᴏʀʀʏ, ᴏɴʟʏ ᴏᴡɴᴇʀ ᴄᴀɴ ᴀᴄᴄᴇꜱꜱ ᴛʜɪꜱ ᴄᴏᴍᴍᴀɴᴅ.")
+    else:
+        await event.reply("**🚫 You are not authorized to use this command!**")
 
 
 @X1.on(events.NewMessage(incoming=True, pattern=r"\%srmsudo(?: |$)(.*)" % hl))
@@ -140,18 +148,17 @@ async def rmsudo(event):
             await event.reply("αвє ᴊʜᴀᴛ кє вααℓ υραʀ ѕє ʀєᴘℓу ᴅє ʀαнα нαι вααᴘ кσ")
             return
 
-        if target not in SUDO_USERS:
+        if not check_sudo(target):
             await event.reply(f"ᴛʜɪꜱ ᴜꜱᴇʀ ɪꜱ ɴᴏᴛ ᴀ ꜱᴜᴅᴏ ᴜꜱᴇʀ !!")
         else:
             if remove_sudo_user(target):
-                # Reload sudo users
-                from config import SUDO_USERS
-                SUDO_USERS.remove(target)
                 await event.reply(f"**✅ Removed** `{target}` **from sudo users!**")
             else:
                 await event.reply("**❌ Failed to remove sudo user!**")
-    else:
+    elif check_sudo(event.sender_id):
         await event.reply("» ꜱᴏʀʀʏ, ᴏɴʟʏ ᴏᴡɴᴇʀ ᴄᴀɴ ᴀᴄᴄᴇꜱꜱ ᴛʜɪꜱ ᴄᴏᴍᴍᴀɴᴅ.")
+    else:
+        await event.reply("**🚫 You are not authorized to use this command!**")
 
 
 @X1.on(events.NewMessage(incoming=True, pattern=r"\%ssudolist(?: |$)(.*)" % hl))
@@ -165,10 +172,31 @@ async def rmsudo(event):
 @X9.on(events.NewMessage(incoming=True, pattern=r"\%ssudolist(?: |$)(.*)" % hl))
 @X10.on(events.NewMessage(incoming=True, pattern=r"\%ssudolist(?: |$)(.*)" % hl))
 async def sudolist(event):
-    if event.sender_id in SUDO_USERS:
+    if check_sudo(event.sender_id):
+        current_sudo = load_sudo_users()
         sudo_list = "**📋 Current Sudo Users:**\n\n"
-        for user_id in SUDO_USERS:
+        for user_id in current_sudo:
             sudo_list += f"• `{user_id}`\n"
         
-        sudo_list += f"\n**Total:** `{len(SUDO_USERS)}` users"
+        sudo_list += f"\n**Total:** `{len(current_sudo)}` users"
         await event.reply(sudo_list)
+    else:
+        await event.reply("**🚫 You are not authorized to use this command!**")
+
+
+@X1.on(events.NewMessage(incoming=True, pattern=r"\%schecksudo(?: |$)(.*)" % hl))
+@X2.on(events.NewMessage(incoming=True, pattern=r"\%schecksudo(?: |$)(.*)" % hl))
+@X3.on(events.NewMessage(incoming=True, pattern=r"\%schecksudo(?: |$)(.*)" % hl))
+@X4.on(events.NewMessage(incoming=True, pattern=r"\%schecksudo(?: |$)(.*)" % hl))
+@X5.on(events.NewMessage(incoming=True, pattern=r"\%schecksudo(?: |$)(.*)" % hl))
+@X6.on(events.NewMessage(incoming=True, pattern=r"\%schecksudo(?: |$)(.*)" % hl))
+@X7.on(events.NewMessage(incoming=True, pattern=r"\%schecksudo(?: |$)(.*)" % hl))
+@X8.on(events.NewMessage(incoming=True, pattern=r"\%schecksudo(?: |$)(.*)" % hl))
+@X9.on(events.NewMessage(incoming=True, pattern=r"\%schecksudo(?: |$)(.*)" % hl))
+@X10.on(events.NewMessage(incoming=True, pattern=r"\%schecksudo(?: |$)(.*)" % hl))
+async def checksudo(event):
+    user_id = event.sender_id
+    if check_sudo(user_id):
+        await event.reply(f"**✅ Yes!** User `{user_id}` is a sudo user!")
+    else:
+        await event.reply(f"**❌ No!** User `{user_id}` is not a sudo user!")
