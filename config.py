@@ -42,7 +42,9 @@ def load_sudo_users():
         if os.path.exists(SUDO_FILE):
             with open(SUDO_FILE, 'r') as f:
                 data = json.load(f)
-                return data.get("sudo_users", [])
+                sudo_users = data.get("sudo_users", [])
+                logging.info(f"✅ Loaded {len(sudo_users)} sudo users from file")
+                return sudo_users
     except Exception as e:
         logging.error(f"Error loading sudo users from file: {e}")
     
@@ -51,8 +53,10 @@ def load_sudo_users():
         env_sudo = list(map(lambda x: int(x), getenv("SUDO_USERS", default="7403621976").split()))
         # Save to file for future use
         save_sudo_users(env_sudo)
+        logging.info(f"✅ Loaded {len(env_sudo)} sudo users from environment")
         return env_sudo
-    except:
+    except Exception as e:
+        logging.error(f"Error loading sudo users from environment: {e}")
         return [7403621976]  # Ultimate fallback
 
 def save_sudo_users(sudo_list):
@@ -60,6 +64,7 @@ def save_sudo_users(sudo_list):
     try:
         with open(SUDO_FILE, 'w') as f:
             json.dump({"sudo_users": sudo_list}, f, indent=4)
+        logging.info(f"✅ Saved {len(sudo_list)} sudo users to file")
         return True
     except Exception as e:
         logging.error(f"Error saving sudo users: {e}")
@@ -70,7 +75,11 @@ def add_sudo_user(user_id):
     sudo_list = load_sudo_users()
     if user_id not in sudo_list:
         sudo_list.append(user_id)
-        return save_sudo_users(sudo_list)
+        if save_sudo_users(sudo_list):
+            # Update the global SUDO_USERS variable
+            global SUDO_USERS
+            SUDO_USERS = sudo_list
+            return True
     return False
 
 def remove_sudo_user(user_id):
@@ -78,8 +87,21 @@ def remove_sudo_user(user_id):
     sudo_list = load_sudo_users()
     if user_id in sudo_list:
         sudo_list.remove(user_id)
-        return save_sudo_users(sudo_list)
+        if save_sudo_users(sudo_list):
+            # Update the global SUDO_USERS variable
+            global SUDO_USERS
+            SUDO_USERS = sudo_list
+            return True
     return False
+
+def is_sudo_user(user_id):
+    """Check if user is sudo user (checks both memory and file)"""
+    # Check in memory first
+    if user_id in SUDO_USERS:
+        return True
+    # Double check in file
+    file_sudo = load_sudo_users()
+    return user_id in file_sudo
 
 # Load initial sudo users
 SUDO_USERS = load_sudo_users()
