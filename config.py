@@ -1,5 +1,6 @@
 import logging
 import os
+import json
 
 from telethon import TelegramClient
 
@@ -15,11 +16,11 @@ API_ID = getenv("API_ID", "21803165")
 API_HASH = getenv("API_HASH", "05e5e695feb30e25bef47484cc006da7")
 CMD_HNDLR = getenv("CMD_HNDLR", default=".")
 
-# Remove Heroku-specific variables or set them to None
+# Remove Heroku-specific variables
 HEROKU_APP_NAME = None
 HEROKU_API_KEY = None
 
-# Bot Tokens - using getenv with None as default for safety
+# Bot Tokens
 BOT_TOKEN = getenv("BOT_TOKEN", default=None)
 BOT_TOKEN2 = getenv("BOT_TOKEN2", default=None)
 BOT_TOKEN3 = getenv("BOT_TOKEN3", default=None)
@@ -31,11 +32,57 @@ BOT_TOKEN8 = getenv("BOT_TOKEN8", default=None)
 BOT_TOKEN9 = getenv("BOT_TOKEN9", default=None)
 BOT_TOKEN10 = getenv("BOT_TOKEN10", default=None)
 
-# SUDO_USERS configuration
-try:
-    SUDO_USERS = list(map(lambda x: int(x), getenv("SUDO_USERS", default="7403621976").split()))
-except:
-    SUDO_USERS = [7403621976]  # Fallback if environment variable parsing fails
+# SUDO_USERS configuration with file-based storage
+SUDO_FILE = "sudo_users.json"
+
+def load_sudo_users():
+    """Load sudo users from file or environment variable"""
+    try:
+        # Try to load from file first
+        if os.path.exists(SUDO_FILE):
+            with open(SUDO_FILE, 'r') as f:
+                data = json.load(f)
+                return data.get("sudo_users", [])
+    except Exception as e:
+        logging.error(f"Error loading sudo users from file: {e}")
+    
+    # Fallback to environment variable
+    try:
+        env_sudo = list(map(lambda x: int(x), getenv("SUDO_USERS", default="7403621976").split()))
+        # Save to file for future use
+        save_sudo_users(env_sudo)
+        return env_sudo
+    except:
+        return [7403621976]  # Ultimate fallback
+
+def save_sudo_users(sudo_list):
+    """Save sudo users to file"""
+    try:
+        with open(SUDO_FILE, 'w') as f:
+            json.dump({"sudo_users": sudo_list}, f, indent=4)
+        return True
+    except Exception as e:
+        logging.error(f"Error saving sudo users: {e}")
+        return False
+
+def add_sudo_user(user_id):
+    """Add a user to sudo list"""
+    sudo_list = load_sudo_users()
+    if user_id not in sudo_list:
+        sudo_list.append(user_id)
+        return save_sudo_users(sudo_list)
+    return False
+
+def remove_sudo_user(user_id):
+    """Remove a user from sudo list"""
+    sudo_list = load_sudo_users()
+    if user_id in sudo_list:
+        sudo_list.remove(user_id)
+        return save_sudo_users(sudo_list)
+    return False
+
+# Load initial sudo users
+SUDO_USERS = load_sudo_users()
 
 # Add ALTRON users and OWNER_ID
 for x in ALTRON:
@@ -45,13 +92,14 @@ for x in ALTRON:
 try:
     OWNER_ID = int(getenv("OWNER_ID", default="7456681709"))
 except:
-    OWNER_ID = 7456681709  # Fallback if environment variable parsing fails
+    OWNER_ID = 7456681709
 
 if OWNER_ID not in SUDO_USERS:
     SUDO_USERS.append(OWNER_ID)
 
-# Remove duplicates
+# Remove duplicates and save final list
 SUDO_USERS = list(set(SUDO_USERS))
+save_sudo_users(SUDO_USERS)
 
 # Validate essential variables
 if not API_ID or not API_HASH:
@@ -68,7 +116,7 @@ if not active_bots:
     exit(1)
 
 logging.info(f"🤖 Starting {len(active_bots)} bot(s)...")
-
+logging.info(f"👑 Sudo users loaded: {len(SUDO_USERS)} users")
 
 # ------------- CLIENTS -------------
 # Initialize only the bots that have tokens
