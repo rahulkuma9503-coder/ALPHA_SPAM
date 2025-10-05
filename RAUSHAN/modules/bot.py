@@ -1,8 +1,8 @@
 import sys
-import heroku3
 import os
+import json
 
-from config import X1, X2, X3, X4, X5, X6, X7, X8, X9, X10, OWNER_ID, SUDO_USERS, CMD_HNDLR as hl
+from config import X1, X2, X3, X4, X5, X6, X7, X8, X9, X10, OWNER_ID, SUDO_USERS, load_sudo_users, save_sudo_users, add_sudo_user, remove_sudo_user, CMD_HNDLR as hl
 
 from os import execl, getenv
 from telethon import events
@@ -85,45 +85,20 @@ async def restart(e):
         execl(sys.executable, sys.executable, *sys.argv)
 
 
-@X1.on(events.NewMessage(incoming=True, pattern=r"\%ssudo(?: |$)(.*)" % hl))
-@X2.on(events.NewMessage(incoming=True, pattern=r"\%ssudo(?: |$)(.*)" % hl))
-@X3.on(events.NewMessage(incoming=True, pattern=r"\%ssudo(?: |$)(.*)" % hl))
-@X4.on(events.NewMessage(incoming=True, pattern=r"\%ssudo(?: |$)(.*)" % hl))
-@X5.on(events.NewMessage(incoming=True, pattern=r"\%ssudo(?: |$)(.*)" % hl))
-@X6.on(events.NewMessage(incoming=True, pattern=r"\%ssudo(?: |$)(.*)" % hl))
-@X7.on(events.NewMessage(incoming=True, pattern=r"\%ssudo(?: |$)(.*)" % hl))
-@X8.on(events.NewMessage(incoming=True, pattern=r"\%ssudo(?: |$)(.*)" % hl))
-@X9.on(events.NewMessage(incoming=True, pattern=r"\%ssudo(?: |$)(.*)" % hl))
-@X10.on(events.NewMessage(incoming=True, pattern=r"\%ssudo(?: |$)(.*)" % hl))
+@X1.on(events.NewMessage(incoming=True, pattern=r"\%saddsudo(?: |$)(.*)" % hl))
+@X2.on(events.NewMessage(incoming=True, pattern=r"\%saddsudo(?: |$)(.*)" % hl))
+@X3.on(events.NewMessage(incoming=True, pattern=r"\%saddsudo(?: |$)(.*)" % hl))
+@X4.on(events.NewMessage(incoming=True, pattern=r"\%saddsudo(?: |$)(.*)" % hl))
+@X5.on(events.NewMessage(incoming=True, pattern=r"\%saddsudo(?: |$)(.*)" % hl))
+@X6.on(events.NewMessage(incoming=True, pattern=r"\%saddsudo(?: |$)(.*)" % hl))
+@X7.on(events.NewMessage(incoming=True, pattern=r"\%saddsudo(?: |$)(.*)" % hl))
+@X8.on(events.NewMessage(incoming=True, pattern=r"\%saddsudo(?: |$)(.*)" % hl))
+@X9.on(events.NewMessage(incoming=True, pattern=r"\%saddsudo(?: |$)(.*)" % hl))
+@X10.on(events.NewMessage(incoming=True, pattern=r"\%saddsudo(?: |$)(.*)" % hl))
 async def addsudo(event):
     if event.sender_id == OWNER_ID:
-        # Check if Heroku environment variables are available
-        HEROKU_APP_NAME = getenv("HEROKU_APP_NAME", None)
-        HEROKU_API_KEY = getenv("HEROKU_API_KEY", None)
-        
-        if HEROKU_APP_NAME is None or HEROKU_API_KEY is None:
-            await event.reply("**🚫 This command only works on Heroku!**\n\n"
-                            "You are currently using **Render.com**\n"
-                            "To add sudo users, please update the `SUDO_USERS` environment variable in your Render dashboard.")
-            return
-
-        sudousers = getenv("SUDO_USERS", default=None)
-
         ok = await event.reply(f"»🍃 ᴀʟᴘʜᴀ ᴋᴀ єк σʀ иєω вєтα αᴅᴅ нσ gуα 🍃")
         target = ""
-        
-        try:
-            Heroku = heroku3.from_key(HEROKU_API_KEY)
-            app = Heroku.app(HEROKU_APP_NAME)
-        except Exception as e:
-            await ok.edit(f"**❌ Heroku Error:** \n`{str(e)}`\n\nPlease check your HEROKU_API_KEY and HEROKU_APP_NAME")
-            return
-            
-        heroku_var = app.config()
-        
-        if event is None:
-            return
-            
         try:
             reply_msg = await event.get_reply_message()
             target = reply_msg.sender_id
@@ -131,21 +106,54 @@ async def addsudo(event):
             await ok.edit("αвє ᴊʜᴀᴛ кє вααℓ υραʀ ѕє ʀєᴘℓу ᴅє ʀαнα нαι вααᴘ кσ")
             return
 
-        if str(target) in sudousers:
+        if target in SUDO_USERS:
             await ok.edit(f"ᴛʜɪꜱ ᴜꜱᴇʀ ɪꜱ ᴀʟʀᴇᴀᴅʏ ᴀ ꜱᴜᴅᴏ ᴜꜱᴇʀ !!")
         else:
-            if len(sudousers) > 0:
-                newsudo = f"{sudousers} {target}"
+            if add_sudo_user(target):
+                # Reload sudo users
+                from config import SUDO_USERS
+                SUDO_USERS.append(target)
+                await ok.edit(f"» σує нσує мєʀα ᴄυтє вαᴄнα\n:⧽ `{target}`\n:⧽ `ωєℓᴄσмє тσ ᴀʟᴘʜᴀ ѕραм`")
             else:
-                newsudo = f"{target}"
-            await ok.edit(f"» σує нσує мєʀα ᴄυтє вαᴄнα\n:⧽ `{target}`\n:⧽ `ωєℓᴄσмє тσ ᴀʟᴘʜᴀ ѕραм`")
-            heroku_var["SUDO_USERS"] = newsudo    
+                await ok.edit("**❌ Failed to add sudo user!**")
     
     elif event.sender_id in SUDO_USERS:
         await event.reply("» ꜱᴏʀʀʏ, ᴏɴʟʏ ᴏᴡɴᴇʀ ᴄᴀɴ ᴀᴄᴄᴇꜱꜱ ᴛʜɪꜱ ᴄᴏᴍᴍᴀɴᴅ.")
 
 
-# New command for Render.com users to check sudo users
+@X1.on(events.NewMessage(incoming=True, pattern=r"\%srmsudo(?: |$)(.*)" % hl))
+@X2.on(events.NewMessage(incoming=True, pattern=r"\%srmsudo(?: |$)(.*)" % hl))
+@X3.on(events.NewMessage(incoming=True, pattern=r"\%srmsudo(?: |$)(.*)" % hl))
+@X4.on(events.NewMessage(incoming=True, pattern=r"\%srmsudo(?: |$)(.*)" % hl))
+@X5.on(events.NewMessage(incoming=True, pattern=r"\%srmsudo(?: |$)(.*)" % hl))
+@X6.on(events.NewMessage(incoming=True, pattern=r"\%srmsudo(?: |$)(.*)" % hl))
+@X7.on(events.NewMessage(incoming=True, pattern=r"\%srmsudo(?: |$)(.*)" % hl))
+@X8.on(events.NewMessage(incoming=True, pattern=r"\%srmsudo(?: |$)(.*)" % hl))
+@X9.on(events.NewMessage(incoming=True, pattern=r"\%srmsudo(?: |$)(.*)" % hl))
+@X10.on(events.NewMessage(incoming=True, pattern=r"\%srmsudo(?: |$)(.*)" % hl))
+async def rmsudo(event):
+    if event.sender_id == OWNER_ID:
+        try:
+            reply_msg = await event.get_reply_message()
+            target = reply_msg.sender_id
+        except:
+            await event.reply("αвє ᴊʜᴀᴛ кє вααℓ υραʀ ѕє ʀєᴘℓу ᴅє ʀαнα нαι вααᴘ кσ")
+            return
+
+        if target not in SUDO_USERS:
+            await event.reply(f"ᴛʜɪꜱ ᴜꜱᴇʀ ɪꜱ ɴᴏᴛ ᴀ ꜱᴜᴅᴏ ᴜꜱᴇʀ !!")
+        else:
+            if remove_sudo_user(target):
+                # Reload sudo users
+                from config import SUDO_USERS
+                SUDO_USERS.remove(target)
+                await event.reply(f"**✅ Removed** `{target}` **from sudo users!**")
+            else:
+                await event.reply("**❌ Failed to remove sudo user!**")
+    else:
+        await event.reply("» ꜱᴏʀʀʏ, ᴏɴʟʏ ᴏᴡɴᴇʀ ᴄᴀɴ ᴀᴄᴄᴇꜱꜱ ᴛʜɪꜱ ᴄᴏᴍᴍᴀɴᴅ.")
+
+
 @X1.on(events.NewMessage(incoming=True, pattern=r"\%ssudolist(?: |$)(.*)" % hl))
 @X2.on(events.NewMessage(incoming=True, pattern=r"\%ssudolist(?: |$)(.*)" % hl))
 @X3.on(events.NewMessage(incoming=True, pattern=r"\%ssudolist(?: |$)(.*)" % hl))
@@ -158,6 +166,9 @@ async def addsudo(event):
 @X10.on(events.NewMessage(incoming=True, pattern=r"\%ssudolist(?: |$)(.*)" % hl))
 async def sudolist(event):
     if event.sender_id in SUDO_USERS:
-        sudousers = getenv("SUDO_USERS", "Not set")
-        await event.reply(f"**📋 Current Sudo Users:**\n`{sudousers}`\n\n"
-                         "**ℹ️ Note:** On Render.com, edit SUDO_USERS in environment variables.")
+        sudo_list = "**📋 Current Sudo Users:**\n\n"
+        for user_id in SUDO_USERS:
+            sudo_list += f"• `{user_id}`\n"
+        
+        sudo_list += f"\n**Total:** `{len(SUDO_USERS)}` users"
+        await event.reply(sudo_list)
