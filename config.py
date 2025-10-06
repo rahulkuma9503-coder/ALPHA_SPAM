@@ -106,7 +106,8 @@ def reload_sudo_users():
 
 def is_sudo(user_id):
     """Check if user is sudo (always checks fresh from file)"""
-    return user_id in load_sudo_users() or user_id == OWNER_ID
+    sudo_users_list = load_sudo_users()
+    return user_id in sudo_users_list or user_id == OWNER_ID
 
 def is_sudo_user(user_id):
     """Check if user is sudo user (checks both memory and file)"""
