@@ -94,6 +94,20 @@ def remove_sudo_user(user_id):
             return True
     return False
 
+def get_sudo_users():
+    """Get current sudo users list (always fresh from file)"""
+    return load_sudo_users()
+
+def reload_sudo_users():
+    """Reload sudo users from file and update global variable"""
+    global SUDO_USERS
+    SUDO_USERS = load_sudo_users()
+    return SUDO_USERS
+
+def is_sudo(user_id):
+    """Check if user is sudo (always checks fresh from file)"""
+    return user_id in load_sudo_users() or user_id == OWNER_ID
+
 def is_sudo_user(user_id):
     """Check if user is sudo user (checks both memory and file)"""
     # Check in memory first
