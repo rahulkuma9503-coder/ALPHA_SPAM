@@ -224,3 +224,80 @@ async def checksudo(event):
 @sudo_only
 async def test_cmd(event):
     await event.reply("**✅ Sudo access confirmed!** You can use this command!")
+
+
+# Help command
+@X1.on(events.NewMessage(incoming=True, pattern=r"\%shelp(?: |$)(.*)" % hl))
+@X2.on(events.NewMessage(incoming=True, pattern=r"\%shelp(?: |$)(.*)" % hl))
+@X3.on(events.NewMessage(incoming=True, pattern=r"\%shelp(?: |$)(.*)" % hl))
+@X4.on(events.NewMessage(incoming=True, pattern=r"\%shelp(?: |$)(.*)" % hl))
+@X5.on(events.NewMessage(incoming=True, pattern=r"\%shelp(?: |$)(.*)" % hl))
+@X6.on(events.NewMessage(incoming=True, pattern=r"\%shelp(?: |$)(.*)" % hl))
+@X7.on(events.NewMessage(incoming=True, pattern=r"\%shelp(?: |$)(.*)" % hl))
+@X8.on(events.NewMessage(incoming=True, pattern=r"\%shelp(?: |$)(.*)" % hl))
+@X9.on(events.NewMessage(incoming=True, pattern=r"\%shelp(?: |$)(.*)" % hl))
+@X10.on(events.NewMessage(incoming=True, pattern=r"\%shelp(?: |$)(.*)" % hl))
+@sudo_only
+async def help_cmd(event):
+    help_text = """
+**🤖 Alpha Spam Bot Commands:**
+
+**👑 Owner Commands:**
+• `{hl}addsudo` - Add sudo user (reply to user)
+• `{hl}rmsudo` - Remove sudo user (reply to user)
+
+**⚡ Sudo User Commands:**
+• `{hl}ping` - Check bot response time
+• `{hl}reboot` - Restart the bot
+• `{hl}sudolist` - Show all sudo users
+• `{hl}checksudo` - Check your sudo status
+• `{hl}test` - Test sudo access
+
+**🎯 Spam/Raid Commands:**
+• Use other spam/raid commands as needed
+
+**Note:** Sudo users have access to all features except owner-only commands.
+    """.format(hl=hl)
+    await event.reply(help_text)
+
+
+# Alive command
+@X1.on(events.NewMessage(incoming=True, pattern=r"\%salive(?: |$)(.*)" % hl))
+@X2.on(events.NewMessage(incoming=True, pattern=r"\%salive(?: |$)(.*)" % hl))
+@X3.on(events.NewMessage(incoming=True, pattern=r"\%salive(?: |$)(.*)" % hl))
+@X4.on(events.NewMessage(incoming=True, pattern=r"\%salive(?: |$)(.*)" % hl))
+@X5.on(events.NewMessage(incoming=True, pattern=r"\%salive(?: |$)(.*)" % hl))
+@X6.on(events.NewMessage(incoming=True, pattern=r"\%salive(?: |$)(.*)" % hl))
+@X7.on(events.NewMessage(incoming=True, pattern=r"\%salive(?: |$)(.*)" % hl))
+@X8.on(events.NewMessage(incoming=True, pattern=r"\%salive(?: |$)(.*)" % hl))
+@X9.on(events.NewMessage(incoming=True, pattern=r"\%salive(?: |$)(.*)" % hl))
+@X10.on(events.NewMessage(incoming=True, pattern=r"\%salive(?: |$)(.*)" % hl))
+@sudo_only
+async def alive_cmd(event):
+    await event.reply("**💖 Alpha Spam Bot is Alive!**\n\n**Status:** ✅ Running\n**Platform:** Render.com\n**Sudo System:** ✅ Dynamic File-Based")
+
+
+# ================================
+# IMPORTANT: For ALL your other commands (spam, raid, etc.)
+# You need to add @sudo_only decorator above each command function
+# ================================
+
+# Example of how to update your other commands:
+"""
+# BEFORE (Old way - problematic):
+@X1.on(events.NewMessage(incoming=True, pattern=r"\%sspam(?: |$)(.*)" % hl))
+async def spam(e):
+    if e.sender_id in SUDO_USERS:  # This doesn't work with dynamic sudo
+        # spam code here
+        await e.reply("Spamming...")
+
+# AFTER (New way - working):
+@X1.on(events.NewMessage(incoming=True, pattern=r"\%sspam(?: |$)(.*)" % hl))
+@X2.on(events.NewMessage(incoming=True, pattern=r"\%sspam(?: |$)(.*)" % hl))
+@X3.on(events.NewMessage(incoming=True, pattern=r"\%sspam(?: |$)(.*)" % hl))
+# ... add for all X4 to X10
+@sudo_only  # Add this decorator - removes the need for manual sudo check
+async def spam(e):
+    # spam code here (no need for if condition)
+    await e.reply("Spamming...")
+"""
