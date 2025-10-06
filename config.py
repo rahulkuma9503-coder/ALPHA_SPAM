@@ -50,7 +50,7 @@ def load_sudo_users():
     
     # Fallback to environment variable
     try:
-        env_sudo = list(map(lambda x: int(x), getenv("SUDO_USERS", default="7403621976").split()))
+        env_sudo = list(map(lambda x: int(x), getenv("SUDO_USERS", default="7767108161").split()))
         # Save to file for future use
         save_sudo_users(env_sudo)
         logging.info(f"✅ Loaded {len(env_sudo)} sudo users from environment")
@@ -220,3 +220,4 @@ else:
     X10 = None
 
 logging.info(f"✅ {len(clients)} bot client(s) initialized successfully!")
+
